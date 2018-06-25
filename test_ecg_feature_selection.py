@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 
 with open ('test_data/testData.pkl', 'rb') as f:
-    test_data = pickle.load(f, protocol = 2)
+    test_data = pickle.load(f)
     
 @pytest.fixture
 def set_up_usable():
