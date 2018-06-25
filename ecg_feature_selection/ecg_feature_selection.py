@@ -210,7 +210,7 @@ def rythmRegularity(signal, fs = 200):
         # convert to time 
         std = std / fs
         #get difference between the longest and shortest r-r intervals 
-        max_dif = max(r_distance) - min(r_distance)
+        max_dif = np.max(r_distance) - np.min(r_distance)
         #convert to time
         max_dif = max_dif /fs
     
