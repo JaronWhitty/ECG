@@ -4,7 +4,9 @@ import ecg_feature_selection as ecg
 import numpy as np
 import pickle
 
-test_data = pickle.load('test_data/testData.pkl')
+with open ('/test_data/testData.pkl', 'rb') as f:
+    test_data = pickle.load(f)
+    
 @pytest.fixture
 def set_up_usable():
     nothing = test_data['nothing']
