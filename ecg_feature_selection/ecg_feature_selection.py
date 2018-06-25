@@ -1,6 +1,6 @@
 import scipy.signal as sig
 import numpy as np
-import pywt
+#import pywt
 
 def usable(signal):
     if rythmRegularity(signal)[0] > .2:
@@ -164,7 +164,8 @@ def get_bpm(signal, fs = 200):
     #get r peaks
     peaks = get_r_peaks(signal)
     #calculate average time difference between peaks
-    last = peaks[0]
+    if len(peaks) != 0:
+        last = peaks[0]
     r_distance = []
     for i in range(1, len(peaks)):
         if (peaks[i] - last) <= 2*fs and (peaks[i] - last) >= .3*fs: #make sure not bogus distance from cut off data
@@ -196,42 +197,44 @@ def rythmRegularity(signal, fs = 200):
     peaks = get_r_peaks(filt)
     #get the distacnes of each r-r interval
     r_distance = []
-    last = peaks[0]
+    if len(peaks) != 0:
+        last = peaks[0]
     for i in range(1, len(peaks)):
         if (peaks[i] - last) <= 2*fs and (peaks[i] - last) >= .3*fs: #make sure not bogus distance from cut off data
             r_distance.append(peaks[i] - last)
         last = peaks[i]
     
-    #get standard deviation
-    std = np.std(r_distance)
-    # convert to time 
-    std = std / fs
-    #get difference between the longest and shortest r-r intervals 
-    max_dif = max(r_distance) - min(r_distance)
-    #convert to time
-    max_dif = max_dif /fs
+    if len(r_distance) != 0:
+        #get standard deviation
+        std = np.std(r_distance)
+        # convert to time 
+        std = std / fs
+        #get difference between the longest and shortest r-r intervals 
+        max_dif = max(r_distance) - min(r_distance)
+        #convert to time
+        max_dif = max_dif /fs
     
     return std, max_dif
     
-def wavelet(signal, C = 2, wavelet = 'db4', mode = 'soft'):
-    ca, cd = pywt.dwt(signal, wavelet, axis = 0)
-    cat = pywt.threshold(ca, (np.std(ca)*np.sqrt(C*np.log(len(signal)))), mode)
-    cdt = pywt.threshold(cd, (np.std(cd)*np.sqrt(C*np.log(len(signal)))), mode)
+#def wavelet(signal, C = 2, wavelet = 'db4', mode = 'soft'):
+    #ca, cd = pywt.dwt(signal, wavelet, axis = 0)
+    #cat = pywt.threshold(ca, (np.std(ca)*np.sqrt(C*np.log(len(signal)))), mode)
+    #cdt = pywt.threshold(cd, (np.std(cd)*np.sqrt(C*np.log(len(signal)))), mode)
     #thresh = C*np.sqrt(np.std((signal/np.std(cd))*len(signal)))
     #cat = pywt.threshold(ca, thresh, mode)
     #cdt = pywt.threshold(cd, thresh, mode)
-    signal_rec = pywt.idwt(cat, cdt, wavelet, axis = 0)
+    #signal_rec = pywt.idwt(cat, cdt, wavelet, axis = 0)
     
-    return signal_rec
+    #return signal_rec
 
-def slope(signal):
-    slope = []
-    for i in range(len(signal)):
-        if i == 0:
-            slope.append(0)
-            continue
-        slope.append(signal[i] - signal[i -1])
+#def slope(signal):
+    #slope = []
+    #for i in range(len(signal)):
+        #if i == 0:
+            #slope.append(0)
+            #continue
+        #slope.append(signal[i] - signal[i -1])
         
-    slope = np.array(slope)
+    #slope = np.array(slope)
         
-    return slope
+    #return slope
