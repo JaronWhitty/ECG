@@ -86,8 +86,8 @@ def test_rythmRegularity(set_up_filter):
     chicken_regularity = ecg.rythmRegularity(chicken)
     nothing_regularity = ecg.rythmRegularity(nothing)
     peaker_regularity = ecg.rythmRegularity(peaker)
-    assert peaker_regularity[0] == 0.0
-    assert peaker_regularity[1] == 0.0
+    assert peaker_regularity[0] < 0.001
+    assert peaker_regularity[1] < 0.01
     assert chicken_regularity[0] < .01
     assert chicken_regularity[1] < .1
     assert nothing_regularity[0] > .2
