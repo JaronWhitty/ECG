@@ -24,7 +24,7 @@ def test_usable(set_up_usable):
 def set_up_filter():
     nothing = test_data['nothing'] 
     chicken = test_data['chicken']
-    peaker = np.array(([1,1000] + [1]*100)*50)
+    peaker = np.array(([1,1000] + [1]*100)*50 + [1000])
     return nothing, chicken, peaker
     
 def test_filter_ecg(set_up_filter):
@@ -41,6 +41,8 @@ def test_filter_ecg(set_up_filter):
     assert np.std(filt_chicken_no_preserve) < np.std(filt_chicken)
     filt_peaker = ecg.filter_ecg(peaker)
     assert np.std(filt_peaker) < np.std(peaker)
+    too_many_peak_points = ecg.filter_ecg(peaker, num_peak_points = 100)
+    assert np.std(too_many_peak_points) < np.std(peaker)
     
     
 def test_get_r_peaks(set_up_filter):
