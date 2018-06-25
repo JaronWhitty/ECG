@@ -1,11 +1,11 @@
 #Unit Testing for ecg_feature_selection
 import pytest
-import ecg_feature_selection as ecg
+from ecg_feature_selection import ecg_feature_selection as ecg
 import numpy as np
 import pickle
 
 with open ('test_data/testData.pkl', 'rb') as f:
-    test_data = pickle.load(f)
+    test_data = pickle.load(f, protocol = 2)
     
 @pytest.fixture
 def set_up_usable():
