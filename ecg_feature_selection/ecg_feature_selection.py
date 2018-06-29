@@ -23,8 +23,7 @@ def usable(signal, fail_point = .1):
 
 def filter_ecg(signal, cut_off_frequency = .6, Q = 30, baseline_width = 1301, 
                baseline_order = 3, baseline_freq_low = .1, baseline_freq_high = 1, fs = 200, butter_order = 2,
-               points = 11, num_peak_points = 5,
-               drop_first = True, preserve_peak = True):
+               points = 11, num_peak_points = 5, preserve_peak = True):
     """
     filter and detrend a raw ECG signal 
     
@@ -72,10 +71,6 @@ def filter_ecg(signal, cut_off_frequency = .6, Q = 30, baseline_width = 1301,
     if preserve_peak:
        # r_peaks = get_r_peaks(detrended_signal)
         r_peaks = get_r_peaks(baseline_removed)
-        #get rid of first peak which algorithm incorectly grabs (if desired)
-        if drop_first:
-            r_peaks = r_peaks[1:]
-    
         for peak in r_peaks:
             for i in range(num_peak_points):
                 try:
@@ -147,10 +142,9 @@ def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off
         if peak - look_distance < 0:
             stds.append(np.std(signal[:look_distance]))
             continue
-        try:
+        else:
             stds.append(np.std(signal[peak - look_distance:peak + look_distance]))
-        except IndexError:
-            stds.append(np.std(signal[peak - look_distance:]))
+            
     med_std = np.median(stds)
     #accept only the peaks with more normal standard deviation around it
     for i in range(len(stds)):
@@ -186,7 +180,7 @@ def segmenter(signal, fs = 200, r_peak_split = .60, returns = 'avg', too_long = 
     #filter the raw signal    
     signal = filter_ecg(signal)
     #smooth signal more for a cleaner more viewable waveform 
-    signal = filter_ecg(signal, drop_first = False, preserve_peak = False)
+    signal = filter_ecg(signal, preserve_peak = False)
     #split up between r-peaks
     r_peaks = get_r_peaks(signal)
     #find the average distance between r peaks (in counts)
