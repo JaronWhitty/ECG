@@ -101,7 +101,7 @@ def test_interval(set_up_filter):
     pr = ecg.interval(chicken, 'pr')
     rt = ecg.interval(chicken, 'rt')
     assert pr > .05
-    assert rt > 1
+    assert rt > .1
     
     
     
