@@ -93,5 +93,15 @@ def test_rythmRegularity(set_up_filter):
     assert nothing_regularity[0] > .2
     assert nothing_regularity[1] > .25
     
+def test_interval(set_up_filter):
+    nothing, chicken, peaker = set_up_filter
+    with pytest.raises(ValueError) as excinfo:
+        ecg.interval(nothing, 'st')
+    assert excinfo.value.args[0] == 'mode must be \'pr\' or \'rt\''
+    pr = ecg.intervalinterval(chicken, 'pr')
+    rt = ecg.interval(chicken, 'rt')
+    assert pr > .05
+    assert rt > 1
+    
     
     
