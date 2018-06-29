@@ -35,8 +35,6 @@ def test_filter_ecg(set_up_filter):
     assert len(chicken) == len(filt_chicken)
     assert np.std(nothing) > 10*np.std(filt_nothing)
     assert np.std(chicken) < 10*np.std(filt_chicken)
-    filt_chicken_no_drop = ecg.filter_ecg(chicken, drop_first = False)
-    assert np.std(filt_chicken_no_drop) > np.std(filt_chicken)
     filt_chicken_no_preserve = ecg.filter_ecg(chicken, preserve_peak = False)
     assert np.std(filt_chicken_no_preserve) < np.std(filt_chicken)
     filt_peaker = ecg.filter_ecg(peaker)
@@ -50,15 +48,15 @@ def test_get_r_peaks(set_up_filter):
     filt_nothing = ecg.filter_ecg(nothing)
     filt_chicken = ecg.filter_ecg(chicken)
     filt_peaker = ecg.filter_ecg(peaker)
-    filt_chicken_cut = ecg.filter_ecg(chicken[:3970])
+    filt_chicken_cut = ecg.filter_ecg(chicken[:4000])
     peaks_nothing = ecg.get_r_peaks(filt_nothing)
     peaks_chicken = ecg.get_r_peaks(filt_chicken)
     peaks_peaker = ecg.get_r_peaks(filt_peaker)
     peaks_cut = ecg.get_r_peaks(filt_chicken_cut)
-    assert len(peaks_peaker) == 49
+    assert len(peaks_peaker) == 50
     assert len(peaks_nothing) > 0
     assert len(peaks_chicken) > 0
-    assert len(peaks_chicken) > len(peaks_cut)
+    assert len(peaks_chicken) == len(peaks_cut)
     
 def test_segmenter(set_up_filter):
     nothing, chicken, peaker = set_up_filter
