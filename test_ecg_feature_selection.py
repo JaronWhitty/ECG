@@ -70,6 +70,8 @@ def test_segmenter(set_up_filter):
     with pytest.raises(ValueError) as excinfo:
         ecg.segmenter(peaker, returns = 'bad')
     assert excinfo.value.args[0] == 'returns must either be avg or beats'
+    chicken_cut = chicken[:4000]
+    assert len(ecg.segmenter(chicken_cut)) < len(chicken_cut)
     
 def test_get_bpm(set_up_filter):
     nothing, chicken, peaker = set_up_filter
@@ -93,8 +95,16 @@ def test_rythmRegularity(set_up_filter):
     assert nothing_regularity[0] > .2
     assert nothing_regularity[1] > .25
     
-def test_interval(set_up_filter):
-    nothing, chicken, peaker = set_up_filter
+@pytest.fixture
+def set_up_interval():
+    nothing = test_data['nothing']
+    chicken = test_data['chicken']
+    invert = np.array(([0]*50 + [250] + [0]*30 + [1500] + [0]*70 + [-500] + [0] * 40)*20)
+    return nothing, chicken, invert
+    
+    
+def test_interval(set_up_interval):
+    nothing, chicken, invert = set_up_interval
     with pytest.raises(ValueError) as excinfo:
         ecg.interval(nothing, 'st')
     assert excinfo.value.args[0] == 'mode must be \'pr\' or \'rt\''
@@ -102,6 +112,8 @@ def test_interval(set_up_filter):
     rt = ecg.interval(chicken, 'rt')
     assert pr > .05
     assert rt > .1
+    rt = ecg.interval(invert, 'rt')
+    assert rt != 0
     
     
     
