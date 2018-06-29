@@ -98,7 +98,7 @@ def test_interval(set_up_filter):
     with pytest.raises(ValueError) as excinfo:
         ecg.interval(nothing, 'st')
     assert excinfo.value.args[0] == 'mode must be \'pr\' or \'rt\''
-    pr = ecg.intervalinterval(chicken, 'pr')
+    pr = ecg.interval(chicken, 'pr')
     rt = ecg.interval(chicken, 'rt')
     assert pr > .05
     assert rt > 1
