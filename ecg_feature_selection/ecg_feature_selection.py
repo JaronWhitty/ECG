@@ -5,7 +5,7 @@ import numpy as np
 
 def usable(signal, fail_point = .1):
     """
-    determines if the raw signal is usable to get data
+    determines if the raw signal is usable to extract features
     
     Args:
         signal (numpy array): raw ECG signal we wish to determine the usability of
@@ -15,7 +15,7 @@ def usable(signal, fail_point = .1):
     """
     #We find the standard deviation of the distances between r-peaks. An unusable signal will still get peaks,
     #but these peaks will not be in any regualar form like an ECG signal's peaks would be
-    if rythmRegularity(signal)[0] > .1:
+    if rythmRegularity(signal)[0] > fail_point:
         return False
     else:
         return True
@@ -37,7 +37,7 @@ def filter_ecg(signal, cut_off_frequency = .6, Q = 30, baseline_width = 1301,
         baseline_freq_high (float): high end frequency to cut off to eliminate baseline drift. Default .1 Hz
         butter_order (int): The order of the butter filter used to eliminate baseline drift. Defualt 2
         points (int): The number of points to use for the bartlett window. Default 11
-        num_peak_points (int): The number of points around each r-peak to keep at their original amplitude
+        num_peak_points (int): The number of points around each r-peak to keep at their original amplitude. Default 5
         
     Returns:
          numpy array: The filtered and detrended ECG signal
@@ -84,18 +84,18 @@ def filter_ecg(signal, cut_off_frequency = .6, Q = 30, baseline_width = 1301,
     
     return smooth_signal
 
-def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 2):
+def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 1.6):
     """
     get the r peaks from a filtered de-trended ecg signal 
     
     Args:
         signal (numpy array): The signal from which to find the r-peaks
-        exp (int): exponent that we take the signal data to, find peaks easier
-        peak_order (int): number of data points on each side to compare when finding peaks
-        high_cut_off (float): percent above the median r-peak amplitude that constitues an invalid r-peak
-        low_cut_off (float): percent below the median r-peak amplitude that constitutes an invalid r-peak
-        med_perc (float): percent of the median time one peak back and one peak forward that would surely not be an r peak
-        too_noisy (float): How many times the median standard deviation around an R peak that flags noise instead of acutal heart beat
+        exp (int): exponent that we take the signal data to, find peaks easier. Default 3
+        peak_order (int): number of data points on each side to compare when finding peaks. Default 80
+        high_cut_off (float): percent above the median r-peak amplitude that constitues an invalid r-peak. Default .8
+        low_cut_off (float): percent below the median r-peak amplitude that constitutes an invalid r-peak. Dfeault .5
+        med_perc (float): percent of the median time one peak back and one peak forward that would surely not be an r peak. Defualt = .55
+        too_noisy (float): How many times the median standard deviation around an R peak that flags noise instead of acutal heart beat. Default 1.6
     Returns:
         numpy array: The indexes of the detected r-peaks
     """
@@ -148,7 +148,7 @@ def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off
     med_std = np.median(stds)
     #accept only the peaks with more normal standard deviation around it
     for i in range(len(stds)):
-        if stds[i] < too_noisy* med_std:
+        if stds[i] < too_noisy* med_std and stds[i] > 1/too_noisy * med_std:
             not_noise.append(i)
             
     peaks = peaks[not_noise]
@@ -164,7 +164,7 @@ def segmenter(signal, fs = 200, r_peak_split = .60, returns = 'avg', too_long = 
         fs (int): The sampling frequency. Default 200 Hz 
         r_peak_split (float): proportion of heart beat we wish to show after the r-peak. Default .6
         returns (str): specifies what should be returned. if 'avg' then returns the average beat along with the domain in seconds. If 'beats' then returns the segemented beats and domain. Default 'avg'
-        too_long(float): specifies number of seconds that would be too long a distance between peaks. Default 2 (30 bpm)
+        too_long(float): specifies number of seconds that would be too long a distance between peaks. Default 1.7 (30 bpm)
         too_short(float): sepcifies number of seconds that would be too short a distance between peaks. Default .3 (200 bpm)
         
     Returns:
@@ -231,7 +231,7 @@ def get_bpm(signal, fs = 200, too_long = 1.7, too_short = .3):
     Args:
         signal (numpy array): The raw ECG signal 
         fs (int): The sampling frequency. Default 200 Hz
-        too_long(float): specifies number of seconds that would be too long a distance between peaks. Default 2 (30 bpm)
+        too_long(float): specifies number of seconds that would be too long a distance between peaks. Default 1.7 (35 bpm)
         too_short(float): sepcifies number of seconds that would be too short a distance between peaks. Default .3 (200 bpm)
         
     Returns:
@@ -264,7 +264,7 @@ def rythmRegularity(signal, fs = 200, too_long = 1.7, too_short = .3):
     Args:
         signal (numpy array): the raw ECG signal
         fs (int): The sampling frequency. Default 200 Hz
-        too_long(float): specifies number of seconds that would be too long a distance between peaks. Default 2 (30 bpm)
+        too_long(float): specifies number of seconds that would be too long a distance between peaks. Default 1.7 (35 bpm)
         too_short(float): sepcifies number of seconds that would be too short a distance between peaks. Default .3 (200 bpm)
         
     Returns:
@@ -299,15 +299,17 @@ def rythmRegularity(signal, fs = 200, too_long = 1.7, too_short = .3):
     
     return std, max_dif
 
-def interval(signal, mode, points = 20, ends_cut = 15, invert_thresh = - 50):
+def interval(signal, mode, points_p = 20, points_t = 50, ends_cut = 15, invert_thresh = - 50):
     """
     returns the time interval (in seconds) between the p and r peak
     
     Args:
         signal (numpy array): The raw ECG signal
         mode (str): Specifies which interval, either 'pr' or 'rt'
-        points (int): Number of points before and after r peak to look start looking for other peaks
-        ends_cut (int): Number of points to cut off from the ends when looking for peaks
+        points_p (int): Number of points before the r peak to start looking for the p peak. Default 20
+        points_t (int): Number of points after the r peak to start looking for the t peak. Default 50
+        ends_cut (int): Number of points to cut off from the ends when looking for peaks. Default 15
+        invert_thresh (int): Below which amplitutde we wish to classify the t wave as an inverted t-wave. Default -50
     Returns:
         float: Time (in secons) Between the specified peaks (pr or rt). 
     """
@@ -315,12 +317,12 @@ def interval(signal, mode, points = 20, ends_cut = 15, invert_thresh = - 50):
         raise ValueError('mode must be \'pr\' or \'rt\'')
     domain, beat = segmenter(signal)
     r = list(beat).index(max(beat))
-    p = list(beat).index(max(beat[ends_cut:r - points]))
+    p = list(beat).index(max(beat[ends_cut:r - points_p]))
     #in some cases there can be an inverted t wave
-    if min(beat[r + points:]) < invert_thresh:
-       t = list(beat).index(min(beat[r+ points:len(beat) - ends_cut]))
+    if min(beat[r + points_t:]) < invert_thresh:
+       t = list(beat).index(min(beat[r+ points_t:len(beat) - ends_cut]))
     else:
-        t = list(beat).index(max(beat[r+ points:len(beat) - ends_cut]))
+        t = list(beat).index(max(beat[r+ points_t:len(beat) - ends_cut]))
     if mode == 'pr':
         return domain[r] - domain[p]
     elif mode == 'rt':
