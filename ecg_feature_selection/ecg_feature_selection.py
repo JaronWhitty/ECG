@@ -106,7 +106,7 @@ def filter_ecg(signal, normalized_frequency = .6, Q = 30, baseline_width = 301,
     
     return smooth_signal
 
-def get_r_peaks(signal, exp = 3, peak_order = 50, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 1.6, noise_level = 5000, noise_points = 10):
+def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 1.6, noise_level = 5000, noise_points = 10):
     """
     get the r peaks from a filtered de-trended ecg signal 
     
@@ -118,7 +118,7 @@ def get_r_peaks(signal, exp = 3, peak_order = 50, high_cut_off = .8, low_cut_off
         low_cut_off (float): percent below the median r-peak amplitude that constitutes an invalid r-peak. Dfeault .5
         med_perc (float): percent of the median time one peak back and one peak forward that would surely not be an r peak. Defualt = .55
         too_noisy (float): How many times the median standard deviation around an R peak that flags noise instead of acutal heart beat. Default 1.6
-        noise_level (float): Number above which we would consider noise from the original signal. Default 1000
+        noise_level (float): Number above which we would consider noise from the original signal. Default 5000
         noise_points (int): Number of points on each side of the peaks to check for the noise level. Default 10
     Returns:
         numpy array: The indexes of the detected r-peaks

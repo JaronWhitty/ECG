@@ -108,7 +108,7 @@ def test_rythmRegularity(set_up_filter):
 def set_up_interval():
     nothing = test_data['nothing']
     chicken = test_data['chicken']
-    invert = np.array(([0]*50 + [250] + [0]*30 + [1500] + [0]*70 + [-500] + [0] * 40)*20)
+    invert = np.array(([0]*50 + [250] + [0]*30 + [1500] + [0]*70 + [-1000] + [0] * 40)*20)
     return nothing, chicken, invert
     
     
