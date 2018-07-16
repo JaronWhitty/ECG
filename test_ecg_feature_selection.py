@@ -47,7 +47,7 @@ def test_filter_ecg(set_up_filter):
     assert np.std(filt_chicken_preserve) > np.std(filt_chicken)
     filt_peaker = ecg.filter_ecg(peaker)
     assert np.std(filt_peaker) < np.std(peaker)
-    too_many_peak_points = ecg.filter_ecg(peaker, num_peak_points = 10000)
+    too_many_peak_points = ecg.filter_ecg(peaker, num_peak_points = 1000000)
     assert np.std(too_many_peak_points) < np.std(peaker)
     
     
