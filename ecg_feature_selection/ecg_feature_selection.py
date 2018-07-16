@@ -151,11 +151,15 @@ def get_r_peaks(signal, exp = 3, peak_order = 50, high_cut_off = .8, low_cut_off
         dist.append(peaks[i+1] - peaks[i-1])
     median = np.median(dist)
     #from the way we look at the distance we skipped the first and last, so add them back in
-    not_t = [0]
+    if len(peaks) != 0:
+        not_t = [0]
+    else: 
+        not_t = []
     for i in range(len(dist)):
         if dist[i] > median*med_perc:
             not_t.append(i + 1)
-    not_t.append(len(peaks) -1)
+    if len(peaks) != 0:
+        not_t.append(len(peaks) -1)
     #occasionally there happens to be noise at a similar amplitude and similar distances as r-peaks 
     #to get rid of these we can eliminate the detected peaks that have unusally high standard deviations around them
     peaks = peaks[not_t]
