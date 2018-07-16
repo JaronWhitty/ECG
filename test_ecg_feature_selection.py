@@ -109,11 +109,12 @@ def set_up_interval():
     nothing = test_data['nothing']
     chicken = test_data['chicken']
     invert = np.array(([0]*50 + [250] + [0]*30 + [1500] + [0]*70 + [-1000] + [0] * 40)*20)
-    return nothing, chicken, invert
+    not_invert = np.array(([0]*50 + [250] + [0]*30 + [1500] + [0]*70 + [-500] + [0] * 40)*20)
+    return nothing, chicken, invert, not_invert
     
     
 def test_interval(set_up_interval):
-    nothing, chicken, invert = set_up_interval
+    nothing, chicken, invert, not_invert = set_up_interval
     with pytest.raises(ValueError) as excinfo:
         ecg.interval(nothing, 'st')
     assert excinfo.value.args[0] == 'mode must be \'pr\' or \'rt\''
@@ -122,6 +123,8 @@ def test_interval(set_up_interval):
     assert pr > .05
     assert rt > .1
     rt = ecg.interval(invert, 'rt')
+    assert rt > 0
+    rt - ecg.interval(not_invert, 'rt')
     assert rt != 0
     
     
