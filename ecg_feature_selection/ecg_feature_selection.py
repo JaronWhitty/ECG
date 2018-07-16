@@ -349,6 +349,8 @@ def rythmRegularity(signal, fs = 200, too_long = 1.7, too_short = .3):
         max_dif = np.max(r_distance) - np.min(r_distance)
         #convert to time
         max_dif = max_dif /fs
+    else:
+        return None
     
     return std, max_dif
 

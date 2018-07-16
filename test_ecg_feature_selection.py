@@ -11,13 +11,15 @@ with open ('test_data/testData.pkl', 'rb') as f:
 def set_up_usable():
     nothing = test_data['nothing']
     chicken = test_data['chicken'] 
-    return nothing, chicken
+    unusable = np.array(([1,2,3,4,5,100000,5,4,3,1]+[0]*100+[1,2,3,4,5,100000,5,4,3,2,1]+[0]*50)*50)
+    return nothing, chicken, unusable
     
     
 def test_usable(set_up_usable):
-    nothing, chicken = set_up_usable
+    nothing, chicken, unusable = set_up_usable
     assert ecg.usable(nothing) == False
     assert ecg.usable(chicken) == True
+    assert ecg.usable(unusable) == False
 
 
 @pytest.fixture
