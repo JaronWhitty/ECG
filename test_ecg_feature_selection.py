@@ -26,6 +26,14 @@ def set_up_filter():
     chicken = test_data['chicken']
     peaker = np.array(([1,1000] + [1]*100)*50 + [1000])
     return nothing, chicken, peaker
+
+def test_snr(set_up_filter):
+    nothing, chicken, peaker = set_up_filter
+    nothing_snr = ecg.snr(nothing)
+    chicken_snr = ecg.snr(chicken)
+    peaker_snr = ecg.snr(peaker)
+    assert chicken_snr < nothing_snr
+    assert peaker_snr < nothing_snr
     
 def test_filter_ecg(set_up_filter):
     nothing, chicken, peaker = set_up_filter
