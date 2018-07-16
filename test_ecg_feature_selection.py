@@ -124,8 +124,8 @@ def test_interval(set_up_interval):
     assert rt > .1
     rt = ecg.interval(invert, 'rt')
     assert rt > 0
-    rt - ecg.interval(not_invert, 'rt')
-    assert rt != 0
+    rt = ecg.interval(nothing, 'rt')
+    assert rt is None
     
     
     
