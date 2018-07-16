@@ -221,7 +221,10 @@ def segmenter(signal, fs = 200, r_peak_split = .60, returns = 'avg', too_long = 
     signal = filter_ecg(signal, preserve_peak = False)
     #find the average distance between r peaks (in counts)
     r_distance = []
-    last = r_peaks[0]
+    if len(r_peaks) != 0:
+        last = r_peaks[0]
+    else: 
+        return [0], [0]
     for i in range(1, len(r_peaks)):
         if (r_peaks[i] - last) <= too_long*fs and (r_peaks[i] - last) >= too_short*fs: #make sure not bogus distance from cut off data
             r_distance.append(r_peaks[i] - last)
