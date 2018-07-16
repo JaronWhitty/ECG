@@ -204,12 +204,13 @@ def segmenter(signal, fs = 200, r_peak_split = .60, returns = 'avg', too_long = 
         too_short(float): sepcifies number of seconds that would be too short a distance between peaks. Default .3 (200 bpm)
         
     Returns:
-            2-element tuple containing
+            2-element tuple containing domain and specified wave, or None
         
             - **domain_avg** (*numpy array*): The time domain (in seconds) for the average heartbeat
             - **avg_beat** (*numpy array*): The average heart beat in wave form
             - **domain_beats** (*numpy array*): A list of the segmented beats (only returned when returns = 'beats'). 
             - **full_beats** (*numpy array*): the domain for the full_beast (in seconds) (only returned when returns = 'beats')
+            - **None**: Returns None when there are no r-peaks detected
     """
     if returns not in ['avg', 'beats']:
         raise ValueError('returns must either be avg or beats')
@@ -224,7 +225,7 @@ def segmenter(signal, fs = 200, r_peak_split = .60, returns = 'avg', too_long = 
     if len(r_peaks) != 0:
         last = r_peaks[0]
     else: 
-        return [0], [0]
+        return None
     for i in range(1, len(r_peaks)):
         if (r_peaks[i] - last) <= too_long*fs and (r_peaks[i] - last) >= too_short*fs: #make sure not bogus distance from cut off data
             r_distance.append(r_peaks[i] - last)
@@ -366,7 +367,10 @@ def interval(signal, mode, perc_p = .10, perc_t = .20, ends_perc = .10, invert_t
     """
     if mode not in ['pr', 'rt']:
         raise ValueError('mode must be \'pr\' or \'rt\'')
-    domain, beat = segmenter(signal)
+    if segmenter(signal) is not None:
+        domain, beat = segmenter(signal)
+    else: 
+        return None
     ends_cut = int(ends_perc * len(beat))
     points_p = int(perc_p * len(beat))
     points_t = int(perc_t * len(beat))
