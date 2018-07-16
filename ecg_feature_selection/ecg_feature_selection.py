@@ -94,13 +94,14 @@ def filter_ecg(signal, normalized_frequency = .6, Q = 30, baseline_width = 301,
         r_peaks = get_r_peaks(baseline_removed)
         for peak in r_peaks:
             for i in range(num_peak_points):
-                try:
-                    #smooth_signal[peak + i] = detrended_signal[peak + i]
-                    #smooth_signal[peak - i] = detrended_signal[peak - i]
+                #smooth_signal[peak + i] = detrended_signal[peak + i]
+                #smooth_signal[peak - i] = detrended_signal[peak - i]
+                if peak + i > len(baseline_removed) or peak - i < 0:
+                    continue
+                else:
                     smooth_signal[peak + i] = baseline_removed[peak + i]
                     smooth_signal[peak - i] = baseline_removed[peak - i]
-                except IndexError:
-                    continue
+                
     
     
     return smooth_signal
