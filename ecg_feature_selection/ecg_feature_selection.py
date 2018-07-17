@@ -106,13 +106,13 @@ def filter_ecg(signal, normalized_frequency = .6, Q = 30, baseline_width = 301,
     
     return smooth_signal
 
-def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 1.6, noise_level = 5000, noise_points = 10):
+def get_r_peaks(signal, exp = 2, peak_order = 80, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 1.6, noise_level = 5000, noise_points = 10):
     """
     get the r peaks from a filtered de-trended ecg signal 
     
     Args:
         signal (numpy array): The signal from which to find the r-peaks
-        exp (int): exponent that we take the signal data to, find peaks easier. Default 3
+        exp (int): exponent that we take the signal data to, find peaks easier. Default 2
         peak_order (int): number of data points on each side to compare when finding peaks. Default 80
         high_cut_off (float): percent above the median r-peak amplitude that constitues an invalid r-peak. Default .8
         low_cut_off (float): percent below the median r-peak amplitude that constitutes an invalid r-peak. Dfeault .5
@@ -135,7 +135,7 @@ def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off
     median = np.median(signal[peaks])
     valid = []
     for i in range(len(peaks)):
-        if signal[peaks[i]] <= median + median * high_cut_off and signal[peaks[i]] >= median - median * low_cut_off:
+        if abs(signal[peaks[i]]) <= abs(median + median * high_cut_off) and abs(signal[peaks[i]]) >= abs(median - median * low_cut_off):
             valid.append(i)
     peaks = peaks[valid]        
     #often times noise is filtered down to around the same level as r peaks and the standard deviation filter isn't good enough

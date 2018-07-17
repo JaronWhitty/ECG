@@ -11,7 +11,15 @@ with open ('test_data/testData.pkl', 'rb') as f:
 def set_up_usable():
     nothing = test_data['nothing']
     chicken = test_data['chicken'] 
-    unusable = np.array(([1,2,3,4,5,100000,5,4,3,1]+[0]*100+[1,2,3,4,5,100000,5,4,3,2,1]+[0]*50)*50)
+    unusable = np.array((1,4000,1,4000,1,4000,1,4000,1,4000,1)*500)
+    for i in range(0, len(unusable), 200):
+        for j in range(0, 15):
+            unusable[i-j] = 500 +2*j
+            unusable[i+j] = 500 + 2*j
+    for i in range(0, len(unusable), 70):
+        for j in range(0, 15):
+            unusable[i-j] = 500 +2*j
+            unusable[i+j] = 500 + 2*j
     return nothing, chicken, unusable
     
     
