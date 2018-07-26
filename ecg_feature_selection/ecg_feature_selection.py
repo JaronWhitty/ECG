@@ -381,7 +381,7 @@ def interval(signal, mode, perc_p = .10, perc_t = .20, ends_perc = .10, invert_t
         float: Time (in secons) Between the specified peaks (pr or rt). 
     """
     if mode not in ['pr', 'rt', 'qrs']:
-        raise ValueError('mode must be \'pr\', \'qrs\',  or \'rt\'')
+        raise ValueError('mode must be \'pr\', \'qrs\', or \'rt\'')
     if segmenter(signal) is not None:
         domain, beat = segmenter(signal)
     else: 
