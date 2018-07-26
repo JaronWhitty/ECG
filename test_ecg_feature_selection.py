@@ -71,6 +71,8 @@ def test_get_r_peaks(set_up_filter):
     peaks_chicken = ecg.get_r_peaks(filt_chicken)
     peaks_peaker = ecg.get_r_peaks(filt_peaker)
     peaks_cut = ecg.get_r_peaks(filt_chicken_cut)
+    noise = np.array([-10000, 10000] * 2500)
+    assert len(ecg.get_r_peaks(noise)) == 0
     assert len(peaks_peaker) == 50
     assert len(peaks_nothing) > 0
     assert len(peaks_chicken) > 0
@@ -127,7 +129,7 @@ def test_interval(set_up_interval):
     nothing, chicken, invert, not_invert = set_up_interval
     with pytest.raises(ValueError) as excinfo:
         ecg.interval(nothing, 'st')
-    assert excinfo.value.args[0] == 'mode must be \'pr\' or \'rt\''
+    assert excinfo.value.args[0] == 'mode must be \'pr\', \'qrs\', or \'rt\''
     pr = ecg.interval(chicken, 'pr')
     rt = ecg.interval(chicken, 'rt')
     assert pr > .05
@@ -136,6 +138,24 @@ def test_interval(set_up_interval):
     assert rt > 0
     rt = ecg.interval(nothing, 'rt')
     assert rt is None
+    assert ecg.interval(chicken, 'qrs') > .05
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

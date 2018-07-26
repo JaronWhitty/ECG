@@ -106,7 +106,7 @@ def filter_ecg(signal, normalized_frequency = .6, Q = 30, baseline_width = 301,
     
     return smooth_signal
 
-def get_r_peaks(signal, exp = 2, peak_order = 80, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 1.6, noise_level = 5000, noise_points = 10):
+def get_r_peaks(signal, exp = 3, peak_order = 80, high_cut_off = .8, low_cut_off = .5, med_perc = .55, too_noisy = 1.6, noise_level = 5000, noise_points = 10):
     """
     get the r peaks from a filtered de-trended ecg signal 
     
@@ -123,13 +123,25 @@ def get_r_peaks(signal, exp = 2, peak_order = 80, high_cut_off = .8, low_cut_off
     Returns:
         numpy array: The indexes of the detected r-peaks
     """
-    #exentuate the r peaks
     og_signal = signal
     signal = filter_ecg(signal)
-    r_finder = signal**exp
-    peaks = sig.argrelextrema(r_finder, np.greater, order = peak_order, mode = 'wrap')
+    #exentuate the r peaks
+    #r_finder = signal**exp
+    #peaks = sig.argrelextrema(r_finder, np.greater, order = peak_order, mode = 'wrap')
     #convert peaks to 1D numpy array
-    peaks = peaks[0]
+    #peaks = peaks[0]
+    #use derivative and find mins to find general location of r peaks
+    deriv = np.gradient(signal)
+    peak_areas = sig.argrelmin(deriv, order = peak_order)
+    peak_areas = peak_areas[0]
+    #now find the maximum around each peak area
+    peaks = []
+    for area in peak_areas:
+        try:
+            peaks.append(list(signal).index(max(signal[area-10:area])))
+        except ValueError: #if the area is right at the beginning 
+            peaks.append(list(signal).index(max(signal[:area])))
+    peaks = np.array(peaks)   
     #when user is not touching the electrodes correctly, the sensor gives very high amplitude spikes, we ignore these
     #ocassionaly there are higher amplitude t-waves then normal. These are still shorter amplitude to the r-peaks. We ignore these as well
     median = np.median(signal[peaks])
@@ -145,6 +157,9 @@ def get_r_peaks(signal, exp = 2, peak_order = 80, high_cut_off = .8, low_cut_off
         if not any(og_signal[peaks[i] - noise_points: peaks[i] + noise_points] > noise_level):
             valid.append(i)
     peaks = peaks[valid]
+    #when the signal is all noise this will get rid of all the peaks
+    if len(peaks) == 0:
+        return peaks
     #some t-waves are still caught in r-peak detection to filter those out look at the distance between peaks
     #we look at the distances from one peak back to one peak forward, thus to single out t peaks
     dist = []
@@ -152,10 +167,7 @@ def get_r_peaks(signal, exp = 2, peak_order = 80, high_cut_off = .8, low_cut_off
         dist.append(peaks[i+1] - peaks[i-1])
     median = np.median(dist)
     #from the way we look at the distance we skipped the first and last, so add them back in
-    if len(peaks) != 0:
-        not_t = [0]
-    else: 
-        return peaks
+    not_t = [0]
     for i in range(len(dist)):
         if dist[i] > median*med_perc:
             not_t.append(i + 1)
@@ -299,23 +311,23 @@ def get_bpm(signal, fs = 200, too_long = 1.7, too_short = .3):
             non_skip.append(dist)
     r_distance = non_skip
   
-    avg_distance = np.mean(r_distance)
-    avg_distance_sec = avg_distance / fs
+    med_distance = np.median(r_distance)
+    med_distance_sec = med_distance / fs
     #convert to bpm
-    bpm = (1/avg_distance_sec)*60
+    bpm = (1/med_distance_sec)*60
     
     return bpm
 
-def rythmRegularity(signal, fs = 200, too_long = 1.7, too_short = .3):
+def rythmRegularity(signal, fs = 200, too_long = 1.7, too_short = .3, skip_length = 1.8):
     """
     gives a metric for the regularity of your heart rythm
     
     Args:
         signal (numpy array): the raw ECG signal
         fs (int): The sampling frequency. Default 200 Hz
-        too_long(float): specifies number of seconds that would be too long a distance between peaks. Default 1.7 (35 bpm)
-        too_short(float): sepcifies number of seconds that would be too short a distance between peaks. Default .3 (200 bpm)
-        
+        too_long (float): specifies number of seconds that would be too long a distance between peaks. Default 1.7 (35 bpm)
+        too_short (float): sepcifies number of seconds that would be too short a distance between peaks. Default .3 (200 bpm)
+        skip_lengt (float): specifies how many times longer than a normal interval would classify as a skipped peak. Default 1.8
     Returns:
             2 element tuple containing
             
@@ -337,7 +349,7 @@ def rythmRegularity(signal, fs = 200, too_long = 1.7, too_short = .3):
     med_diff = np.median(r_distance)
     non_skip = []
     for dist in r_distance:
-        if dist < 1.8*med_diff:
+        if dist < skip_length*med_diff:
             non_skip.append(dist)
     r_distance = non_skip
     if len(r_distance) != 0:
@@ -368,17 +380,34 @@ def interval(signal, mode, perc_p = .10, perc_t = .20, ends_perc = .10, invert_t
     Returns:
         float: Time (in secons) Between the specified peaks (pr or rt). 
     """
-    if mode not in ['pr', 'rt']:
-        raise ValueError('mode must be \'pr\' or \'rt\'')
+    if mode not in ['pr', 'rt', 'qrs']:
+        raise ValueError('mode must be \'pr\', \'qrs\',  or \'rt\'')
     if segmenter(signal) is not None:
         domain, beat = segmenter(signal)
     else: 
         return None
     ends_cut = int(ends_perc * len(beat))
-    points_p = int(perc_p * len(beat))
+    #points_p = int(perc_p * len(beat))
     points_t = int(perc_t * len(beat))
     r = list(beat).index(max(beat))
-    p = list(beat).index(max(beat[ends_cut:r - points_p]))
+    #p = list(beat).index(max(beat[ends_cut:r - points_p]))
+    #to get q, p and s points we look at the derivative
+    #initialize q and s
+    q = r - 20
+    s = r + 20
+    deriv = np.gradient(beat)
+    for i in np.arange(r-20, r)[::-1]:
+        if deriv[i] < 1:
+            q = i
+            break
+    for i in range(r+5, r+20):
+        if deriv[i] > -1:
+            s = i
+            break
+    area = list(deriv).index(np.max(deriv[:r-15]))
+    p = list(deriv).index(min(deriv[area:area + 7], key = abs))
+    #q = list(beat).index(min(beat[r-10:r]))
+    #s = list(beat).index(min(beat[r:r+20]))
     #in some cases there can be an inverted t wave
     if min(beat[r + points_t:]) < np.median(beat[r + points_t:]) -invert_thresh*max(beat):
        t = list(beat).index(min(beat[r+ points_t:len(beat) - ends_cut]))
@@ -388,6 +417,8 @@ def interval(signal, mode, perc_p = .10, perc_t = .20, ends_perc = .10, invert_t
         return domain[r] - domain[p]
     elif mode == 'rt':
         return domain[t] - domain[r]
+    else:
+        return domain[s] - domain[q]
 #def wavelet(signal, C = 2, wavelet = 'db4', mode = 'soft'):
     #ca, cd = pywt.dwt(signal, wavelet, axis = 0)
     #cat = pywt.threshold(ca, (np.std(ca)*np.sqrt(C*np.log(len(signal)))), mode)
