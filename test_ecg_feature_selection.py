@@ -63,18 +63,18 @@ def test_filter_ecg(set_up_filter):
     
 def test_get_r_peaks(set_up_filter):
     nothing, chicken, peaker = set_up_filter
-    filt_nothing = ecg.filter_ecg(nothing)
-    filt_chicken = ecg.filter_ecg(chicken)
-    filt_peaker = ecg.filter_ecg(peaker)
-    filt_chicken_cut = ecg.filter_ecg(chicken[:4000])
-    peaks_nothing = ecg.get_r_peaks(filt_nothing)
-    peaks_chicken = ecg.get_r_peaks(filt_chicken)
-    peaks_peaker = ecg.get_r_peaks(filt_peaker)
-    peaks_cut = ecg.get_r_peaks(filt_chicken_cut)
+    #filt_nothing = ecg.filter_ecg(nothing)
+    #filt_chicken = ecg.filter_ecg(chicken)
+    #filt_peaker = ecg.filter_ecg(peaker)
+    #filt_chicken_cut = ecg.filter_ecg(chicken[:4000])
+    peaks_nothing = ecg.get_r_peaks(nothing)
+    peaks_chicken = ecg.get_r_peaks(chicken)
+    peaks_peaker = ecg.get_r_peaks(peaker)
+    peaks_cut = ecg.get_r_peaks(chicken[:4000])
     noise = np.array([-10000, 10000] * 2500)
     assert len(ecg.get_r_peaks(noise)) == 0
-    assert len(peaks_peaker) == 50
-    assert len(peaks_nothing) > 0
+    assert max(peaker[peaks_peaker] - np.median(peaker[peaks_peaker])) == 0
+    assert len(peaks_nothing) == 0
     assert len(peaks_chicken) > 0
     assert len(peaks_chicken) == len(peaks_cut)
     
