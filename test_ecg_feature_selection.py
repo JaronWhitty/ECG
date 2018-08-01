@@ -63,16 +63,16 @@ def test_filter_ecg(set_up_filter):
     
 def test_get_r_peaks(set_up_filter):
     nothing, chicken, peaker = set_up_filter
-    #filt_nothing = ecg.filter_ecg(nothing)
-    #filt_chicken = ecg.filter_ecg(chicken)
-    #filt_peaker = ecg.filter_ecg(peaker)
-    #filt_chicken_cut = ecg.filter_ecg(chicken[:4000])
-    peaks_nothing = ecg.get_r_peaks(nothing)
-    peaks_chicken = ecg.get_r_peaks(chicken)
-    peaks_peaker = ecg.get_r_peaks(peaker)
-    peaks_cut = ecg.get_r_peaks(chicken[:4000])
+    filt_nothing = ecg.filter_ecg(nothing)
+    filt_chicken = ecg.filter_ecg(chicken)
+    filt_peaker = ecg.filter_ecg(peaker)
+    filt_chicken_cut = ecg.filter_ecg(chicken[:4000])
+    peaks_nothing = ecg.get_r_peaks(nothing, filt_nothing)
+    peaks_chicken = ecg.get_r_peaks(chicken, filt_chicken)
+    peaks_peaker = ecg.get_r_peaks(peaker, filt_peaker)
+    peaks_cut = ecg.get_r_peaks(chicken[:4000], filt_chicken_cut)
     noise = np.array([-10000, 10000] * 2500)
-    assert len(ecg.get_r_peaks(noise)) == 0
+    assert len(ecg.get_r_peaks(noise, ecg.filter_ecg(noise))) == 0
     assert max(peaker[peaks_peaker] - np.median(peaker[peaks_peaker])) == 0
     assert len(peaks_nothing) == 0
     assert len(peaks_chicken) > 0
@@ -80,25 +80,36 @@ def test_get_r_peaks(set_up_filter):
     
 def test_segmenter(set_up_filter):
     nothing, chicken, peaker = set_up_filter
-    chicken_wave = ecg.segmenter(chicken)
-    chicken_beats = ecg.segmenter(chicken, returns = 'beats')
-    peaker_wave = ecg.segmenter(peaker)
+    #filt_nothing = ecg.filter_ecg(nothing)
+    filt_chicken = ecg.filter_ecg(chicken)
+    filt_peaker = ecg.filter_ecg(peaker)
+    #peaks_nothing = ecg.get_r_peaks(filt_nothing)
+    peaks_chicken = ecg.get_r_peaks(chicken, filt_chicken)
+    peaks_peaker = ecg.get_r_peaks(peaker, filt_peaker)
+    chicken_wave = ecg.segmenter(filt_chicken, peaks_chicken)
+    chicken_beats = ecg.segmenter(filt_chicken, peaks_chicken, returns = 'beats')
+    peaker_wave = ecg.segmenter(filt_peaker, peaks_peaker)
     assert len(chicken_beats) < len(chicken)
     assert len(chicken_beats[0]) == len(chicken_beats[1])
     assert len(chicken_wave) < len(chicken)
     assert len(chicken_wave[0]) == len(chicken_wave[1])
     assert len(peaker_wave[0]) == len(peaker_wave[0])
     with pytest.raises(ValueError) as excinfo:
-        ecg.segmenter(peaker, returns = 'bad')
+        ecg.segmenter(filt_peaker, peaks_peaker, returns = 'bad')
     assert excinfo.value.args[0] == 'returns must either be avg or beats'
-    chicken_cut = chicken[:4000]
-    assert len(ecg.segmenter(chicken_cut)) < len(chicken_cut)
+    filt_chicken_cut = ecg.filter_ecg(chicken[:4000])
+    peaks_chicken_cut = ecg.get_r_peaks(chicken[:4000], filt_chicken_cut)
+    assert len(ecg.segmenter(filt_chicken_cut, peaks_chicken_cut)) < len(chicken[:4000])
     
 def test_get_bpm(set_up_filter):
     nothing, chicken, peaker = set_up_filter
-    chicken_bpm = ecg.get_bpm(chicken)
+    filt_chicken = ecg.filter_ecg(chicken)
+    filt_peaker = ecg.filter_ecg(peaker)
+    peaks_chicken = ecg.get_r_peaks(chicken, filt_chicken)
+    peaks_peaker = ecg.get_r_peaks(peaker, filt_peaker)
+    chicken_bpm = ecg.get_bpm(peaks_chicken)
     #nothing_bpm = ecg.get_bpm(nothing)
-    peaker_bpm = ecg.get_bpm(peaker)
+    peaker_bpm = ecg.get_bpm(peaks_peaker)
     assert round(chicken_bpm) == 80.0
     #assert nothing_bpm > 30 and nothing_bpm < 200
     assert peaker_bpm > 110
@@ -106,9 +117,13 @@ def test_get_bpm(set_up_filter):
     
 def test_rythmRegularity(set_up_filter):
     nothing, chicken, peaker = set_up_filter
-    chicken_regularity = ecg.rythmRegularity(chicken)
+    filt_chicken = ecg.filter_ecg(chicken)
+    filt_peaker = ecg.filter_ecg(peaker)
+    peaks_chicken = ecg.get_r_peaks(chicken, filt_chicken)
+    peaks_peaker = ecg.get_r_peaks(peaker, filt_peaker)
+    chicken_regularity = ecg.rythmRegularity(peaks_chicken)
     #nothing_regularity = ecg.rythmRegularity(nothing)
-    peaker_regularity = ecg.rythmRegularity(peaker)
+    peaker_regularity = ecg.rythmRegularity(peaks_peaker)
     assert peaker_regularity[0] < 0.001
     assert peaker_regularity[1] < 0.01
     assert chicken_regularity[0] < .01
@@ -127,18 +142,30 @@ def set_up_interval():
     
 def test_interval(set_up_interval):
     nothing, chicken, invert, not_invert = set_up_interval
+    filt_nothing = ecg.filter_ecg(nothing)
+    filt_chicken = ecg.filter_ecg(nothing)
+    filt_invert = ecg.filter_ecg(invert)
+    #filt_not_invert = ecg.filter_ecg(not_invert)
+    peaks_nothing = ecg.get_r_peaks(nothing, filt_nothing)
+    peaks_chicken = ecg.get_r_peaks(chicken, filt_chicken)
+    peaks_invert = ecg.get_r_peaks(invert, filt_invert)
+    #peaks_not_invert = ecg.get_r_peaks(not_invert, filt_not_invert)
+    nothing_wave = ecg.segmenter(filt_nothing, peaks_nothing)
+    chicken_wave = ecg.segmenter(filt_chicken, peaks_chicken)
+    invert_wave = ecg.segmenter(filt_invert, peaks_invert)
+    #not_invert_wave = ecg.segmenter(filt_not_invert, peaks_not_invert)
     with pytest.raises(ValueError) as excinfo:
-        ecg.interval(nothing, 'st')
+        ecg.interval(chicken_wave[0], chicken_wave[1], 'st')
     assert excinfo.value.args[0] == 'mode must be \'pr\', \'qrs\', or \'rt\''
-    pr = ecg.interval(chicken, 'pr')
-    rt = ecg.interval(chicken, 'rt')
+    pr = ecg.interval(chicken_wave[0], chicken_wave[1], 'pr')
+    rt = ecg.interval(chicken_wave[0], chicken_wave[1], 'rt')
     assert pr > .05
     assert rt > .1
-    rt = ecg.interval(invert, 'rt')
+    rt = ecg.interval(invert_wave[0], invert_wave[1], 'rt')
     assert rt > 0
-    rt = ecg.interval(nothing, 'rt')
+    rt = ecg.interval(nothing_wave, nothing_wave, 'rt')
     assert rt is None
-    assert ecg.interval(chicken, 'qrs') > .05
+    assert ecg.interval(chicken_wave[0], chicken_wave[1], 'qrs') > .05
     
     
     

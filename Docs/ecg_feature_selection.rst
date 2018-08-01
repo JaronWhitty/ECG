@@ -16,6 +16,10 @@ ecg\_feature\_selection.ecg\_feature\_selection module
 
 .. image:: _images/filtering_process.png
 
+*Example of whole process:*
+
+.. image:: _images/ECG_process_exp.png
+
 *Example of use:*
 
 .. code-block:: python
@@ -24,6 +28,7 @@ ecg\_feature\_selection.ecg\_feature\_selection module
 	rhythm_std, rhythm_diff = rythmRegularity(signal)
 	pr = interval(signal, 'pr')
 	rt = interval(signal, 'rt')
+	qrs = interval(signal, 'qrs')
 	wave_domain, wave = segmenter(signal)
 
 
