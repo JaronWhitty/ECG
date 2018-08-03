@@ -1,1 +1,1 @@
-from ecg_feature_selection import ecg_feature_selection
+from ecg_feature_selection import *

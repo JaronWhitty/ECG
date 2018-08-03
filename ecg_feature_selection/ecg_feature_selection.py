@@ -177,14 +177,6 @@ def get_r_peaks(og_signal, signal, exp = 3, peak_order = 80, high_cut_off = .8, 
         except ValueError: #if the area is right at the beginning 
             peaks.append(list(signal).index(max(signal[:area])))
     peaks = np.array(peaks)   
-    #when user is not touching the electrodes correctly, the sensor gives very high amplitude spikes, we ignore these
-    #ocassionaly there are higher amplitude t-waves then normal. These are still shorter amplitude to the r-peaks. We ignore these as well
-    median = np.median(signal[peaks])
-    valid = []
-    for i in range(len(peaks)):
-        if abs(signal[peaks[i]]) <= abs(median + median * high_cut_off) and abs(signal[peaks[i]]) >= abs(median - median * low_cut_off):
-            valid.append(i)
-    peaks = peaks[valid]        
     #often times noise is filtered down to around the same level as r peaks and the standard deviation filter isn't good enough
     #To cover these cases we look at the original unfiltered signal to take out peaks that are noise
     valid = []
@@ -195,6 +187,14 @@ def get_r_peaks(og_signal, signal, exp = 3, peak_order = 80, high_cut_off = .8, 
     #when the signal is all noise this will get rid of all the peaks
     if len(peaks) == 0:
         return peaks
+    #when user is not touching the electrodes correctly, the sensor gives very high amplitude spikes, we ignore these
+    #ocassionaly there are higher amplitude t-waves then normal. These are still shorter amplitude to the r-peaks. We ignore these as well
+    median = np.median(signal[peaks])
+    valid = []
+    for i in range(len(peaks)):
+        if abs(signal[peaks[i]]) <= abs(median + median * high_cut_off) and abs(signal[peaks[i]]) >= abs(median - median * low_cut_off):
+            valid.append(i)
+    peaks = peaks[valid]        
     #some t-waves are still caught in r-peak detection to filter those out look at the distance between peaks
     #we look at the distances from one peak back to one peak forward, thus to single out t peaks
     dist = []
@@ -423,7 +423,7 @@ def interval(domain, beat, mode, perc_p = .10, perc_t = .20, ends_perc = .10, in
     area of the P peak, and then find the point closest to zero in that area. To get the T peak we simply look at the
     max to the right of the r peak as the T peak has a large amplitude. If however there is a minimum point 
     within the invert threshold we classify the T wave as inverted, and instead look for the minimum.
-    After the appropriate points are detected, we return the time delta in between the specified interval.
+    After the appropriate points are detected, we return the time delta in between the specified interval. 
     
     Args:
         domain (numpy array): The time domain (in seconds) of the average beat
